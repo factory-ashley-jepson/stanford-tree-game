@@ -3,7 +3,16 @@
 A scheduled Factory automation that checks every Stanford dining hall menu each morning and DMs you where to eat.
 
 - `fetch_menus.py` pulls today's lunch and dinner menus for all 9 halls from [R&DE](https://rdeapps.stanford.edu/dininghallmenu/) as JSON. Python 3.9+ standard library only; a run takes about 10-20 seconds.
-- `PROMPT.md` is the automation's instructions. Edit the preferences to match your taste.
+- `PROMPT.md` is the automation's instructions. Edit the "My preferences" list to match your taste before you paste it in.
+
+## Change your preferences later
+
+Your preferences live in the automation's instructions, so the next run always uses the latest version.
+
+- **In the app:** open [app.factory.ai/automations](https://app.factory.ai/automations), choose your automation, edit the "My preferences" list in its instructions, and save. Press **Run now** to see the new picks right away.
+- **From Droid:** in any session, ask `update my Stanford Dining Digest automation: I'm vegan now and I don't like eggplant`.
+
+The last line of every DM shows the preferences it used, so you can tell when a change took effect.
 
 ## Set it up
 
