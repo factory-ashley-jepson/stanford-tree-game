@@ -3,28 +3,61 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <title>Stanford Tree Game</title>
+    <title>Tree Run</title>
     <link rel="icon" href="assets/tree-small.png" />
-    <style>
-      html,
-      body {
-        margin: 0;
-        height: 100%;
-        overflow: hidden;
-        background: #1a0505;
-        touch-action: none;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-      canvas {
-        display: block;
-        width: 100vw;
-        height: 100vh;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <canvas id="game"></canvas>
+    <main class="computer">
+      <section class="monitor">
+        <div class="front">
+          <div class="screen">
+            <canvas id="game" width="256" height="192"></canvas>
+            <div class="scanlines"></div>
+            <div class="glass"></div>
+          </div>
+          <div class="side">
+            <div class="grille"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="knobs"><span class="knob"></span><span class="knob"></span></div>
+          </div>
+        </div>
+        <div class="chin">
+          <div class="brand"><span class="stripes"></span>Cardy <b>1</b></div>
+          <div class="floppy"><span class="slot"></span><span class="eject"></span></div>
+          <div class="power"><span class="led"></span>POWER</div>
+        </div>
+      </section>
+
+      <section class="keyboard" aria-label="Keyboard">
+        <div class="legend">SPACE&nbsp;JUMP &middot; &darr;&nbsp;DUCK &middot; M&nbsp;SOUND</div>
+        <div class="keys">
+          <div class="main">
+            <div class="row letters">
+              <span data-key="Digit1">1</span><span data-key="Digit2">2</span><span data-key="Digit3">3</span><span data-key="Digit4">4</span><span data-key="Digit5">5</span><span data-key="Digit6">6</span><span data-key="Digit7">7</span><span data-key="Digit8">8</span><span data-key="Digit9">9</span><span data-key="Digit0">0</span>
+            </div>
+            <div class="row letters">
+              <span data-key="KeyQ">Q</span><span data-key="KeyW">W</span><span data-key="KeyE">E</span><span data-key="KeyR">R</span><span data-key="KeyT">T</span><span data-key="KeyY">Y</span><span data-key="KeyU">U</span><span data-key="KeyI">I</span><span data-key="KeyO">O</span><span data-key="KeyP">P</span>
+            </div>
+            <div class="row letters indent">
+              <span data-key="KeyA">A</span><span data-key="KeyS">S</span><span data-key="KeyD">D</span><span data-key="KeyF">F</span><span data-key="KeyG">G</span><span data-key="KeyH">H</span><span data-key="KeyJ">J</span><span data-key="KeyK">K</span><span data-key="KeyL">L</span>
+            </div>
+            <div class="row letters indent2">
+              <span data-key="KeyZ">Z</span><span data-key="KeyX">X</span><span data-key="KeyC">C</span><span data-key="KeyV">V</span><span data-key="KeyB">B</span><span data-key="KeyN">N</span><span data-key="KeyM">M</span>
+            </div>
+            <div class="row">
+              <span class="space" data-key="Space">JUMP</span>
+            </div>
+          </div>
+          <div class="arrows">
+            <span class="blank"></span><span data-key="ArrowUp">&#9650;</span><span class="blank"></span>
+            <span data-key="ArrowLeft">&#9664;</span><span class="duck" data-key="ArrowDown">&#9660;</span><span data-key="ArrowRight">&#9654;</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="sprites.js"></script>
+    <script src="engine.js"></script>
     <script src="game.js"></script>
   </body>
 </html>

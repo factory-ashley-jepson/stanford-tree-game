@@ -1,14 +1,20 @@
 # Game Spec
 
-> Not planned yet. Run `/plan-game` in Droid to fill this in. Don't write code until this file is filled in.
+> Not planned yet. Run `/plan-game` in Droid to fill this in. Don't change game code until this file is filled in.
+
+You start from **Tree Run**: Cardy runs right, jumps cones and bikes, ducks under birds, and the world speeds up until you crash. Your remix can change a little or a lot.
 
 ## Pitch
 
-_One sentence: what is the game, and why is it fun?_
+_One sentence: what is your game, and why is it fun?_
+
+## What changes
+
+_What's different from Tree Run? (For example: new setting, new obstacles, a power-up, a new move, or a whole new game.)_
 
 ## Core loop
 
-_What does the player do over and over? (For example: dodge, collect, jump, aim, sort.)_
+_What does the player do over and over? (For example: jump, dodge, collect, fly.)_
 
 ## Controls
 
@@ -24,7 +30,7 @@ _What does the player do over and over? (For example: dodge, collect, jump, aim,
 
 ## Look and sound
 
-_Setting, colors, mood. Cardy (`assets/tree.png`) is the hero._
+_Setting, colors, mood. Keep the retro pixel look and Cardy as the hero._
 
 ## Definition of done
 
