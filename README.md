@@ -1,10 +1,10 @@
 # Stanford Tree Game
 
-Build a playable game starring Cardy, the Stanford Tree, in 30 minutes with [Factory](https://factory.ai) Droid.
+Remix a retro arcade game starring Cardy, the Stanford Tree, in 30 minutes with [Factory](https://factory.ai) Droid.
 
-This repo is the blank screen: a canvas, a game loop, input handling, and Cardy. What you build on it is up to you.
+This repo starts as **Tree Run**, a pixel-art runner inspired by the Chrome dinosaur game, playing on an old-school computer. Cardy runs across campus, jumps cones and bikes, and ducks under birds. What it becomes is up to you.
 
-<p align="center"><img src="assets/tree-small.png" alt="Cardy, the Stanford Tree" height="200" /></p>
+<p align="center"><img src="docs/screenshot.png" alt="Tree Run: pixel-art Cardy running on a retro computer screen" width="640" /></p>
 
 ## Quickstart
 
@@ -26,7 +26,7 @@ cd stanford-tree-game
 python3 -m http.server 8000     # Windows: py -m http.server 8000
 ```
 
-Open http://localhost:8000. You should see Cardy. Press any key and Cardy hops.
+Open http://localhost:8000 and press **Space** (or tap the screen) to run. **Space** or **Up** jumps, **Down** ducks, and **M** mutes the sound. On a phone, use the keys under the screen.
 
 **3. Start Droid** in a second terminal, in the same folder:
 
@@ -38,11 +38,11 @@ Sign in with your Factory account when the browser opens.
 
 ## Build it like a real team
 
-You'll take your game through a small version of the software development lifecycle.
+You'll take your remix through a small version of the software development lifecycle.
 
 | Step | What you do | What Droid uses |
 | ---- | ----------- | --------------- |
-| **1. Plan** | Type `/plan-game` and answer a few questions. Droid writes your game plan to `SPEC.md`. | A skill (`.factory/skills/plan-game`) |
+| **1. Plan** | Type `/plan-game` and answer a few questions. Droid writes your remix plan to `SPEC.md`. | A skill (`.factory/skills/plan-game`) |
 | **2. Build** | Ask: `build SPEC.md`. Droid builds it one checklist item at a time. | `AGENTS.md`, the always-on project rules |
 | **3. Test** | Type `/playtest`. Droid checks every Definition of done item and shows pass or fail. Run `/review` for a code review. | A skill (`.factory/skills/playtest`) |
 | **4. Ship** | Ask Droid to commit your work. Then deploy it if you have time (below). | Git |
@@ -52,26 +52,40 @@ Then go around the loop again: add a stretch goal to `SPEC.md`, build it, test i
 **Tips**
 
 - Press **Shift+Tab** to switch modes. Spec mode makes Droid plan before it edits.
-- Keep the game running in your browser and refresh after each change.
-- Small asks work best: "make the acorns fall faster over time" beats "make it better".
+- Keep the game running in your browser and refresh after each change. If you don't see a change, hard refresh (**Cmd+Shift+R**, or **Ctrl+Shift+R** on Windows).
+- Small asks work best: "add a boba power-up that makes Cardy invincible for 3 seconds" beats "make it better".
 
-## Need an idea?
+## What's in the box
+
+| File | What it is |
+| ---- | ---------- |
+| `game.js` | The whole game: tuning numbers at the top, then update and draw. Start here. |
+| `sprites.js` | The pixel art. Each sprite is rows of letters, and each letter is a color from the palette. |
+| `engine.js` | Helpers: `drawSprite`, `drawText`, `rect`, `input`, `beep`, `save`/`load`, and the game loop. |
+| `index.html`, `style.css` | The retro computer around the screen, including the keyboard that lights up as you type. |
+| `assets/` | High-resolution Cardy images, for a title screen or anything else. |
+
+The screen is 256x192 pixels, scaled up so every pixel stays crisp.
+
+## Remix ideas
 
 You don't need one: `/plan-game` will help. Some starting points:
 
-- **Dodge:** Cardy dodges falling acorns, footballs, or Cal Bears.
-- **Runner:** Cardy runs across Main Quad, jumping bikes and scooters.
-- **Flyer:** Cardy flaps between Hoover Towers.
-- **Catch:** Cardy catches boba before finals week ends.
-- **Rhythm:** hit the keys on the beat with the Stanford Band.
+- **New setting:** Big Game night, finals week at Green Library, a run down Palm Drive at sunset.
+- **New obstacles:** Cal Bears, scooters, tour groups, falling acorns.
+- **New moves:** a double jump, a dash, or a glide.
+- **Collectibles:** grab boba or acorns for bonus points.
+- **Power-ups:** a shield, slow motion, or a magnet.
+- **A different game:** keep the engine and the computer, and turn it into a flyer, a dodger, or a catch game.
 
 ## Stretch goals
 
-- Sound effects (the Web Audio API needs no files)
-- A high score saved in `localStorage`
-- Difficulty that ramps up over time
-- Touch controls for phones
-- A title screen and a game-over screen with your best score
+- Day and night: the sky darkens every 500 points, with stars and a moon
+- A power-up with a timer bar on screen
+- Background music made with `beep()`
+- A pause key
+- Lives or hearts instead of one-hit game over
+- Your own pixel art in `sprites.js`
 
 ## Deploy and share
 
@@ -85,4 +99,4 @@ Factory **Automations** run Droid for you on a schedule, from Slack, on GitHub e
 
 ## Credits
 
-Cardy, the Stanford Tree artwork in `assets/`, is from [Stanford Financial Aid](https://financialaid.stanford.edu/images/Cardy.png) and belongs to Stanford University. It is included for this classroom workshop only. The code is MIT licensed (see `LICENSE`).
+Cardy, the Stanford Tree, belongs to Stanford University. The images in `assets/` are from [Stanford Financial Aid](https://financialaid.stanford.edu/images/Cardy.png), and the pixel-art Cardy in `sprites.js` is based on them. Both are included for this classroom workshop only. The code is MIT licensed (see `LICENSE`).

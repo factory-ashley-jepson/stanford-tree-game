@@ -1,0 +1,376 @@
+/* The retro computer around the game. Everything is sized in --u so the
+   whole machine scales to fit the window. */
+
+:root {
+  --u: min(0.94vw, 0.86vh);
+  --plastic: #e3d7bd;
+  --plastic-light: #f3ebd8;
+  --plastic-dark: #c8b996;
+  --plastic-deep: #a39272;
+  --ink: #5c4f3c;
+  --cardinal: #c41e28;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 15%, #3d1d22 0%, #1b0c10 55%, #0b0507 100%);
+  font-family: "Courier New", ui-monospace, monospace;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.computer {
+  width: calc(100 * var(--u));
+}
+
+/* Monitor ---------------------------------------------------------------- */
+
+.monitor {
+  padding: calc(3.5 * var(--u)) calc(3.5 * var(--u)) 0;
+  border-radius: calc(3.5 * var(--u)) calc(3.5 * var(--u)) calc(2.5 * var(--u)) calc(2.5 * var(--u));
+  background: linear-gradient(160deg, var(--plastic-light) 0%, var(--plastic) 45%, var(--plastic-dark) 100%);
+  box-shadow:
+    inset calc(0.4 * var(--u)) calc(0.4 * var(--u)) 0 rgba(255, 255, 255, 0.6),
+    inset calc(-0.5 * var(--u)) calc(-0.6 * var(--u)) 0 rgba(0, 0, 0, 0.12),
+    0 calc(1.2 * var(--u)) 0 var(--plastic-deep),
+    0 calc(2.5 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.55);
+}
+
+.front {
+  display: flex;
+  align-items: center;
+  gap: calc(3 * var(--u));
+}
+
+.screen {
+  position: relative;
+  flex: none;
+  width: calc(74 * var(--u));
+  aspect-ratio: 4 / 3;
+  padding: calc(2.2 * var(--u));
+  border-radius: calc(3 * var(--u));
+  background: #0b0a0f;
+  border: calc(1 * var(--u)) solid #b6a684;
+  box-shadow:
+    inset 0 0 calc(2 * var(--u)) rgba(0, 0, 0, 0.9),
+    0 0 0 calc(0.35 * var(--u)) rgba(255, 255, 255, 0.45);
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(1.8 * var(--u)) / calc(2.4 * var(--u));
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: saturate(1.08) contrast(1.04);
+  cursor: pointer;
+}
+
+.scanlines,
+.glass {
+  position: absolute;
+  inset: calc(2.2 * var(--u));
+  border-radius: calc(1.8 * var(--u)) / calc(2.4 * var(--u));
+  pointer-events: none;
+}
+
+/* One dark line per game pixel row. */
+.scanlines {
+  background: linear-gradient(to bottom, transparent 55%, rgba(0, 0, 0, 0.1) 55%);
+  background-size: 100% calc(100% / 192);
+}
+
+.glass {
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 32%),
+    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.4) 100%);
+  box-shadow:
+    inset 0 0 calc(2.5 * var(--u)) rgba(0, 0, 0, 0.55),
+    0 0 calc(2 * var(--u)) rgba(150, 210, 255, 0.12);
+  animation: flicker 6s infinite steps(1);
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.85;
+  }
+  48% {
+    opacity: 1;
+  }
+}
+
+.side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(5 * var(--u));
+}
+
+.grille {
+  width: 100%;
+}
+
+.grille i {
+  display: block;
+  height: calc(0.9 * var(--u));
+  margin: calc(1.2 * var(--u)) 0;
+  border-radius: var(--u);
+  background: #8e7f63;
+  box-shadow: inset 0 calc(0.3 * var(--u)) calc(0.3 * var(--u)) rgba(0, 0, 0, 0.5), 0 calc(0.2 * var(--u)) 0 rgba(255, 255, 255, 0.5);
+}
+
+.knobs {
+  display: flex;
+  gap: calc(2 * var(--u));
+}
+
+.knob {
+  width: calc(4.4 * var(--u));
+  height: calc(4.4 * var(--u));
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(rgba(0, 0, 0, 0.12) 0 6deg, transparent 6deg 18deg),
+    radial-gradient(circle at 35% 30%, var(--plastic-light), var(--plastic-dark) 70%);
+  box-shadow: 0 calc(0.4 * var(--u)) calc(0.6 * var(--u)) rgba(0, 0, 0, 0.35);
+}
+
+.chin {
+  height: calc(9.5 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 calc(0.8 * var(--u));
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: calc(1.2 * var(--u));
+  font: italic 700 calc(2.6 * var(--u)) / 1 Futura, "Avenir Next", "Trebuchet MS", sans-serif;
+  color: #6e5d45;
+  text-shadow: 0 calc(0.15 * var(--u)) 0 rgba(255, 255, 255, 0.6);
+}
+
+.brand b {
+  color: var(--cardinal);
+}
+
+.stripes {
+  width: calc(3.2 * var(--u));
+  height: calc(2.6 * var(--u));
+  border-radius: calc(0.4 * var(--u));
+  background: linear-gradient(
+    to bottom,
+    #268052 0 25%,
+    #60ba60 25% 50%,
+    var(--cardinal) 50% 75%,
+    #801020 75% 100%
+  );
+}
+
+.floppy {
+  position: relative;
+  width: calc(26 * var(--u));
+  height: calc(3.8 * var(--u));
+  border-radius: calc(0.6 * var(--u));
+  background: var(--plastic-dark);
+  box-shadow: inset 0 calc(0.3 * var(--u)) calc(0.5 * var(--u)) rgba(0, 0, 0, 0.3), 0 calc(0.2 * var(--u)) 0 rgba(255, 255, 255, 0.6);
+}
+
+.floppy .slot {
+  position: absolute;
+  left: calc(2 * var(--u));
+  right: calc(5 * var(--u));
+  top: 50%;
+  height: calc(0.8 * var(--u));
+  transform: translateY(-50%);
+  border-radius: calc(0.4 * var(--u));
+  background: #2a2219;
+}
+
+.floppy .eject {
+  position: absolute;
+  right: calc(1.4 * var(--u));
+  top: 50%;
+  width: calc(2.2 * var(--u));
+  height: calc(1.4 * var(--u));
+  transform: translateY(-50%);
+  border-radius: calc(0.3 * var(--u));
+  background: var(--plastic);
+  box-shadow: 0 calc(0.2 * var(--u)) 0 var(--plastic-deep);
+}
+
+.power {
+  display: flex;
+  align-items: center;
+  gap: calc(1 * var(--u));
+  font-size: calc(1.5 * var(--u));
+  font-weight: 700;
+  letter-spacing: calc(0.2 * var(--u));
+  color: #7a6a50;
+}
+
+.led {
+  width: calc(1.4 * var(--u));
+  height: calc(1.4 * var(--u));
+  border-radius: 50%;
+  background: #6dff7a;
+  box-shadow: 0 0 calc(1.2 * var(--u)) #3dff55, inset 0 0 calc(0.3 * var(--u)) #fff;
+}
+
+/* Keyboard --------------------------------------------------------------- */
+
+.keyboard {
+  margin-top: calc(2.6 * var(--u));
+  padding: calc(2 * var(--u)) calc(2.6 * var(--u)) calc(2.6 * var(--u));
+  border-radius: calc(2.4 * var(--u));
+  background: linear-gradient(175deg, var(--plastic-light) 0%, var(--plastic) 40%, var(--plastic-dark) 100%);
+  box-shadow:
+    inset 0 calc(0.4 * var(--u)) 0 rgba(255, 255, 255, 0.6),
+    0 calc(1.2 * var(--u)) 0 var(--plastic-deep),
+    0 calc(2.2 * var(--u)) calc(3 * var(--u)) rgba(0, 0, 0, 0.5);
+}
+
+.legend {
+  margin-bottom: calc(1.4 * var(--u));
+  font-size: calc(1.4 * var(--u));
+  font-weight: 700;
+  letter-spacing: calc(0.25 * var(--u));
+  color: #7a6a50;
+}
+
+.keys {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(3 * var(--u));
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.9 * var(--u));
+}
+
+.row {
+  display: flex;
+  gap: calc(0.9 * var(--u));
+}
+
+.row.indent {
+  padding-left: calc(2.6 * var(--u));
+}
+
+.row.indent2 {
+  padding-left: calc(5.2 * var(--u));
+}
+
+.keys span {
+  flex: none;
+  width: calc(6.2 * var(--u));
+  height: calc(5 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(0.7 * var(--u));
+  background: linear-gradient(to bottom, #f6efdf, #d8cbae);
+  box-shadow:
+    0 calc(0.6 * var(--u)) 0 var(--plastic-deep),
+    0 calc(0.9 * var(--u)) calc(0.6 * var(--u)) rgba(0, 0, 0, 0.35);
+  font-size: calc(1.7 * var(--u));
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    transform 50ms,
+    box-shadow 50ms;
+}
+
+.keys span.down {
+  transform: translateY(calc(0.5 * var(--u)));
+  background: linear-gradient(to bottom, #e9dfc9, #cdbf9f);
+  box-shadow: 0 calc(0.1 * var(--u)) 0 var(--plastic-deep);
+  color: var(--cardinal);
+}
+
+.keys .space {
+  flex: 1;
+  width: auto;
+  font-size: calc(1.5 * var(--u));
+  letter-spacing: calc(0.6 * var(--u));
+}
+
+.arrows {
+  display: grid;
+  grid-template-columns: repeat(3, calc(6.2 * var(--u)));
+  gap: calc(0.9 * var(--u));
+}
+
+.arrows .blank {
+  visibility: hidden;
+}
+
+/* Phones held upright: bigger screen, just the keys you need. */
+@media (max-aspect-ratio: 4/5) {
+  :root {
+    --u: min(0.96vw, 0.8vh);
+  }
+  .side,
+  .letters,
+  .arrows span:not(.duck) {
+    display: none;
+  }
+  .screen {
+    width: 100%;
+  }
+  .keys span {
+    height: calc(11 * var(--u));
+    font-size: calc(3 * var(--u));
+  }
+  .keys .space {
+    font-size: calc(3 * var(--u));
+  }
+  .arrows {
+    grid-template-columns: calc(24 * var(--u));
+  }
+  .arrows .duck {
+    width: 100%;
+  }
+  .legend {
+    font-size: calc(2.2 * var(--u));
+  }
+  .floppy {
+    width: calc(22 * var(--u));
+  }
+}
+
+/* Phones held sideways: hide the keyboard so the screen fits. */
+@media (max-height: 500px) and (min-aspect-ratio: 4/3) {
+  :root {
+    --u: min(0.94vw, 1.3vh);
+  }
+  .keyboard {
+    display: none;
+  }
+}

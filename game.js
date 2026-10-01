@@ -1,429 +1,371 @@
-// Stanford Tree Game: the blank screen.
-// Everything a game needs is wired up (canvas, loop, input, images).
-// Your game goes in update() and draw() at the bottom of this file.
-
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
-// ---------------------------------------------------------------------------
-// Screen: the canvas fills the window and stays sharp on retina displays.
-// Draw in CSS pixels using screen.width / screen.height.
-// ---------------------------------------------------------------------------
-const screen = { width: 0, height: 0 };
-
-function resize() {
-  const dpr = window.devicePixelRatio || 1;
-  screen.width = window.innerWidth;
-  screen.height = window.innerHeight;
-  canvas.width = Math.round(screen.width * dpr);
-  canvas.height = Math.round(screen.height * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-window.addEventListener("resize", resize);
-resize();
+// Tree Run: a retro runner starring Cardy, the Stanford Tree.
+// Jump over cones and bikes, duck under birds, and beat your high score.
+//
+// This is the whole game. The art is in sprites.js and the helpers
+// (drawSprite, drawText, input, beep, ...) are in engine.js.
+// Make it yours: change the numbers below, add obstacles, add power-ups.
 
 // ---------------------------------------------------------------------------
-// Images: add more with loadImage("assets/your-file.png").
+// Tuning: try changing these first.
 // ---------------------------------------------------------------------------
-function loadImage(src) {
-  const img = new Image();
-  img.src = src;
-  return img;
-}
-
-const images = {
-  tree: loadImage("assets/tree.png"), // 834x1076, for title screens
-  treeSmall: loadImage("assets/tree-small.png"), // 198x256, for gameplay
-};
-
-function drawImage(img, x, y, width, height) {
-  if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, x, y, width, height);
-}
-
-// ---------------------------------------------------------------------------
-// Input: keyboard, mouse, and touch.
-//   input.isDown("ArrowLeft")   true while the key is held
-//   input.wasPressed("Space")   true for one frame when the key goes down
-//   input.pointer               { x, y, down, pressed } for mouse and touch
-// Key names follow KeyboardEvent.code: "Space", "ArrowUp", "KeyW", "Enter", ...
-// ---------------------------------------------------------------------------
-const input = {
-  held: new Set(),
-  pressed: new Set(),
-  pointer: { x: 0, y: 0, down: false, pressed: false },
-  isDown(code) {
-    return this.held.has(code);
-  },
-  wasPressed(code) {
-    return this.pressed.has(code);
-  },
-  anyPressed() {
-    return this.pressed.size > 0 || this.pointer.pressed;
-  },
-  endFrame() {
-    this.pressed.clear();
-    this.pointer.pressed = false;
-  },
-};
-
-const GAME_KEYS = new Set(["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
-
-window.addEventListener("keydown", (e) => {
-  if (GAME_KEYS.has(e.code)) e.preventDefault();
-  if (!input.held.has(e.code)) input.pressed.add(e.code);
-  input.held.add(e.code);
-});
-window.addEventListener("keyup", (e) => input.held.delete(e.code));
-window.addEventListener("blur", () => input.held.clear());
-
-function setPointer(e) {
-  input.pointer.x = e.clientX;
-  input.pointer.y = e.clientY;
-}
-canvas.addEventListener("pointerdown", (e) => {
-  setPointer(e);
-  input.pointer.down = true;
-  input.pointer.pressed = true;
-});
-canvas.addEventListener("pointermove", setPointer);
-window.addEventListener("pointerup", () => (input.pointer.down = false));
-
-// ---------------------------------------------------------------------------
-// Game loop: calls update(dt) then draw() every frame. dt is in seconds.
-// ---------------------------------------------------------------------------
-let lastTime = performance.now();
-
-function frame(now) {
-  // Clamp dt so a backgrounded tab doesn't teleport everything on return.
-  const dt = Math.min((now - lastTime) / 1000, 1 / 20);
-  lastTime = now;
-  update(dt);
-  draw();
-  input.endFrame();
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
-
-// ===========================================================================
-// YOUR GAME STARTS HERE. Replace the placeholder below with your game.
-// ===========================================================================
-
-// Tree Run: Cardy runs across Main Quad, jumping over bikes and scooters.
-// Sizes use u() (1% of the screen's short side) so it plays the same on any screen.
+const GROUND_Y = 168; // y of the ground line, in screen pixels
+const GRAVITY = 1100; // pixels per second per second
+const JUMP_SPEED = 330; // how hard Cardy jumps
+const START_SPEED = 110; // how fast the world scrolls at the start
+const MAX_SPEED = 290;
+const SPEED_UP = 3.5; // speed gained per second
+const BIRDS_AT = 200; // score when birds start showing up
 
 const COLORS = {
-  cardinal: "#8C1515",
-  cardinalDark: "#4a0b0b",
-  sunset: "#E98300",
-  grass: "#2d7a4f",
-  green: "#175E54",
-  sand: "#F4F1EC",
-  sandstone: "#D2B48C",
-  roof: "#a8442a",
+  sky: ["#7ec8e3", "#9fd6e8", "#c3e5ea", "#e9eedd"],
+  sun: "#fff1b8",
+  farHill: "#a9cf9a",
+  hill: "#7fb86a",
+  hillShade: "#5f9a52",
+  tower: "#e6d1a8",
+  towerShade: "#c4a77f",
+  dome: "#c0504a",
+  grass: "#4f9a4a",
+  ground: "#ead2a0",
+  groundSpeck: "#c9a46a",
+  groundLine: "#5a3e2b",
+  dust: "#d8bb84",
+  text: PALETTE.K,
+  title: PALETTE.R,
 };
-const BEST_KEY = "treeRunHighScore";
-const JUMP_KEYS = ["Space", "ArrowUp", "KeyW"];
 
-const game = { state: "title", time: 0, runTime: 0, overTime: 0, score: 0, best: 0, newBest: false, speed: 0, scroll: 0, nextSpawn: 0 };
-const cardy = { y: 0, vy: 0, onGround: true, cut: false };
+// ---------------------------------------------------------------------------
+// Game state
+// ---------------------------------------------------------------------------
+let state = "title"; // "title", "playing", or "over"
+let time = 0;
+let best = load("treeRunBest", 0);
+
+const cardy = { x: 28, y: GROUND_Y, vy: 0, onGround: true, ducking: false };
+
+let speed = START_SPEED;
+let distance = 0;
+let score = 0;
+let newBest = false;
 let obstacles = [];
-let particles = [];
+let untilNextObstacle = 0;
+let dust = [];
+let dustTimer = 0;
+let flashTimer = 0; // score blinks after every 100 points
+let shakeTimer = 0;
+let overTimer = 0;
+let scenery = 0; // how far the background has scrolled
 
-// localStorage can throw in private browsing; the game still works without it.
-try {
-  game.best = Number(localStorage.getItem(BEST_KEY)) || 0;
-} catch {}
-
-const u = () => Math.min(screen.height, screen.width * 1.2) / 100;
-const groundY = () => screen.height * 0.8;
-const treeX = () => screen.width * 0.2;
-const treeSize = () => ({ w: u() * 22 * (198 / 256), h: u() * 22 });
-const jumpPressed = () => JUMP_KEYS.some((k) => input.wasPressed(k)) || input.pointer.pressed;
-const jumpHeld = () => JUMP_KEYS.some((k) => input.isDown(k)) || input.pointer.down;
-const startPressed = () => jumpPressed() || input.wasPressed("Enter");
+const clouds = [
+  { x: 30, y: 26 },
+  { x: 130, y: 44 },
+  { x: 210, y: 18 },
+];
 
 function startRun() {
-  Object.assign(game, { state: "playing", runTime: 0, score: 0, newBest: false, nextSpawn: 1.2 });
-  Object.assign(cardy, { y: 0, vy: 0, onGround: true, cut: false });
+  state = "playing";
+  speed = START_SPEED;
+  distance = 0;
+  score = 0;
+  newBest = false;
   obstacles = [];
-  particles = [];
+  untilNextObstacle = 120;
+  dust = [];
+  flashTimer = 0;
+  cardy.y = GROUND_Y;
+  cardy.vy = 0;
 }
 
 function endRun() {
-  game.state = "over";
-  game.overTime = 0;
-  if (game.score > game.best) {
-    game.best = game.score;
-    game.newBest = true;
-    try {
-      localStorage.setItem(BEST_KEY, String(game.best));
-    } catch {}
+  state = "over";
+  overTimer = 0;
+  shakeTimer = 0.3;
+  beep(220, 0.35, { type: "sawtooth", volume: 0.05, slideTo: 60 });
+  if (score > best) {
+    best = score;
+    newBest = true;
+    save("treeRunBest", best);
   }
 }
 
-function spawnObstacle() {
-  const bike = Math.random() < 0.55;
-  const w = u() * (bike ? 17 : 10);
-  obstacles.push({ type: bike ? "bike" : "scooter", x: screen.width + w, w, h: u() * (bike ? 11 : 14), passed: false });
+// ---------------------------------------------------------------------------
+// Controls
+// ---------------------------------------------------------------------------
+function jumpPressed() {
+  return input.wasPressed("Space") || input.wasPressed("ArrowUp") || input.pointer.pressed;
 }
 
-function puff(count) {
-  for (let i = 0; i < count; i++) {
-    const x = treeX() + treeSize().w / 2 + (Math.random() - 0.5) * u() * 8;
-    const vx = (Math.random() - 0.7) * u() * 30;
-    particles.push({ x, y: groundY(), vx, vy: -Math.random() * u() * 20, life: 0.4 + Math.random() * 0.3, age: 0 });
+function jumpHeld() {
+  return input.isDown("Space") || input.isDown("ArrowUp") || input.pointer.down;
+}
+
+function duckHeld() {
+  return input.isDown("ArrowDown");
+}
+
+// ---------------------------------------------------------------------------
+// Obstacles
+// ---------------------------------------------------------------------------
+function addObstacle(sprite, x, y, options = {}) {
+  const { width, height } = spriteSize(sprite);
+  obstacles.push({ sprite, x, y, width, height, ...options });
+}
+
+function spawnObstacles() {
+  const kinds = ["cone", "cone", "cones", "bike"];
+  if (score >= BIRDS_AT) kinds.push("bird", "bird");
+  const kind = pick(kinds);
+  const x = screen.width + 4;
+  let groupWidth = 0;
+
+  if (kind === "cone") {
+    addObstacle("cone", x, GROUND_Y - 11);
+    groupWidth = 11;
+  } else if (kind === "cones") {
+    const count = pick([2, 3]);
+    for (let i = 0; i < count; i++) addObstacle("cone", x + i * 10, GROUND_Y - 11);
+    groupWidth = count * 10 + 1;
+  } else if (kind === "bike") {
+    addObstacle("bike", x, GROUND_Y - 14);
+    groupWidth = 26;
+  } else if (kind === "bird") {
+    // Low birds must be jumped, middle birds can be ducked, high birds pass overhead.
+    const height = pick([16, 34, 52]);
+    addObstacle("birdUp", x, GROUND_Y - height, { bird: true, extraSpeed: 15 });
+    groupWidth = 16;
   }
+
+  // Leave enough room to land and react, more at higher speeds.
+  untilNextObstacle = groupWidth + rand(1, 1.7) * (speed * 0.75 + 70);
 }
 
+function obstacleHitbox(o) {
+  if (o.bird) return { x: o.x + 1, y: o.y + 3, width: 14, height: 5 };
+  return { x: o.x + 2, y: o.y + 2, width: o.width - 4, height: o.height - 2 };
+}
+
+function cardyHitbox() {
+  if (cardy.ducking) return { x: cardy.x + 4, y: cardy.y - 21, width: 20, height: 19 };
+  return { x: cardy.x + 6, y: cardy.y - 30, width: 16, height: 28 };
+}
+
+// ---------------------------------------------------------------------------
+// Update: runs every frame. dt is the seconds since the last frame.
+// ---------------------------------------------------------------------------
 function update(dt) {
-  game.time += dt;
-  for (const p of particles) {
-    p.age += dt;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vy += u() * 40 * dt;
-  }
-  particles = particles.filter((p) => p.age < p.life);
+  time += dt;
+  flashTimer = Math.max(0, flashTimer - dt);
+  shakeTimer = Math.max(0, shakeTimer - dt);
 
-  if (game.state === "title") {
-    game.scroll += u() * 25 * dt;
-    if (startPressed()) startRun();
-    return;
-  }
-  if (game.state === "over") {
-    game.overTime += dt;
-    // Short delay so a panicked jump press doesn't skip the game over screen.
-    if (game.overTime > 0.6 && startPressed()) startRun();
-    return;
-  }
-
-  game.runTime += dt;
-  game.speed = Math.min(u() * (60 + 3 * game.runTime), u() * 130);
-  game.scroll += game.speed * dt;
-
-  // Jump arc: about 0.7s in the air and 30u high. Releasing early cuts it short.
-  if (cardy.onGround && jumpPressed()) Object.assign(cardy, { vy: u() * 172, onGround: false, cut: false });
-  if (!cardy.onGround) {
-    if (!cardy.cut && cardy.vy > 0 && !jumpHeld()) {
-      cardy.vy *= 0.55;
-      cardy.cut = true;
+  if (state === "title") {
+    scenery += 8 * dt;
+    if (jumpPressed()) {
+      startRun();
+      jump();
     }
-    cardy.vy -= u() * 490 * dt;
-    cardy.y += cardy.vy * dt;
-    if (cardy.y <= 0) {
-      Object.assign(cardy, { y: 0, vy: 0, onGround: true });
-      puff(8);
+  } else if (state === "playing") {
+    updateRun(dt);
+  } else if (state === "over") {
+    overTimer += dt;
+    if (overTimer > 0.6 && jumpPressed()) startRun();
+  }
+
+  for (const cloud of clouds) {
+    cloud.x -= (state === "playing" ? speed * 0.15 : 6) * dt;
+    if (cloud.x < -24) {
+      cloud.x = screen.width + rand(0, 60);
+      cloud.y = rand(12, 56);
     }
   }
 
-  game.nextSpawn -= dt;
-  if (game.nextSpawn <= 0) {
-    spawnObstacle();
-    // Gaps shrink as the run goes on, but never below a clearable distance.
-    game.nextSpawn = Math.max(0.75, 1.3 - game.runTime * 0.01) + Math.random() * 0.9;
+  for (const d of dust) {
+    d.x += d.vx * dt;
+    d.y += d.vy * dt;
+    d.life -= dt;
+  }
+  dust = dust.filter((d) => d.life > 0);
+}
+
+function jump() {
+  cardy.vy = -JUMP_SPEED;
+  cardy.onGround = false;
+  beep(520, 0.12, { slideTo: 900 });
+}
+
+function updateRun(dt) {
+  speed = Math.min(MAX_SPEED, speed + SPEED_UP * dt);
+  distance += speed * dt;
+  scenery += speed * dt;
+
+  const newScore = Math.floor(distance / 10);
+  if (Math.floor(newScore / 100) > Math.floor(score / 100)) {
+    flashTimer = 0.9;
+    beep(880, 0.08);
+    setTimeout(() => beep(1320, 0.12), 90);
+  }
+  score = newScore;
+
+  // Cardy: jump, short hop when the button is released early, fast fall when ducking.
+  if (cardy.onGround && jumpPressed() && !duckHeld()) jump();
+  if (!cardy.onGround && !jumpHeld() && cardy.vy < -JUMP_SPEED * 0.75) cardy.vy = -JUMP_SPEED * 0.75;
+  const gravity = duckHeld() && !cardy.onGround ? GRAVITY * 3 : GRAVITY;
+  cardy.vy += gravity * dt;
+  cardy.y += cardy.vy * dt;
+  if (cardy.y >= GROUND_Y) {
+    if (!cardy.onGround) puffDust(6);
+    cardy.y = GROUND_Y;
+    cardy.vy = 0;
+    cardy.onGround = true;
+  }
+  cardy.ducking = cardy.onGround && duckHeld();
+
+  dustTimer -= dt;
+  if (cardy.onGround && dustTimer <= 0) {
+    puffDust(1);
+    dustTimer = 0.1;
   }
 
-  // Forgiving hitboxes: Cardy is inset 25% on the sides and 20% from the top.
-  const t = treeSize();
-  const hx = treeX() + t.w * 0.25;
-  const hw = t.w * 0.5;
-  const hBottom = groundY() - cardy.y - t.h * 0.05;
+  // Obstacles scroll left with the world. Birds fly a little faster.
+  untilNextObstacle -= speed * dt;
+  if (untilNextObstacle <= 0) spawnObstacles();
   for (const o of obstacles) {
-    o.x -= game.speed * dt;
-    if (!o.passed && o.x + o.w < hx) {
-      o.passed = true;
-      game.score += 1;
-    }
-    const ox = o.x + o.w * 0.18;
-    if (hx < ox + o.w * 0.64 && hx + hw > ox && hBottom > groundY() - o.h * 0.8) {
-      puff(18);
-      endRun();
-      return;
-    }
+    o.x -= (speed + (o.extraSpeed || 0)) * dt;
+    if (o.bird) o.sprite = Math.floor(time * 6) % 2 ? "birdUp" : "birdDown";
   }
-  obstacles = obstacles.filter((o) => o.x + o.w > 0);
+  obstacles = obstacles.filter((o) => o.x > -40);
+
+  const me = cardyHitbox();
+  if (obstacles.some((o) => overlaps(me, obstacleHitbox(o)))) endRun();
+}
+
+function puffDust(count) {
+  for (let i = 0; i < count; i++) {
+    dust.push({
+      x: cardy.x + 8 + rand(-2, 4),
+      y: GROUND_Y - 1,
+      vx: -rand(20, 60),
+      vy: -rand(5, 30),
+      life: rand(0.2, 0.4),
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Drawing
+// Draw: runs every frame after update().
 // ---------------------------------------------------------------------------
+function draw() {
+  ctx.save();
+  if (shakeTimer > 0) ctx.translate(Math.round(rand(-2, 2)), Math.round(rand(-2, 2)));
 
-function drawBackground() {
-  const { width, height } = screen;
-  const gy = groundY();
-  const s = u();
+  drawSky();
+  for (const cloud of clouds) drawSprite("cloud", cloud.x, cloud.y);
+  drawHills(scenery * 0.05, 120, 10, COLORS.farHill);
+  drawHooverTower(screen.width + 40 - ((scenery * 0.08 + 120) % (screen.width + 120)), 132);
+  drawHills(scenery * 0.2, 146, 8, COLORS.hill, COLORS.hillShade);
+  drawGround();
 
-  const sky = ctx.createLinearGradient(0, 0, 0, gy);
-  sky.addColorStop(0, COLORS.cardinalDark);
-  sky.addColorStop(0.55, COLORS.cardinal);
-  sky.addColorStop(1, COLORS.sunset);
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, width, gy);
-  ctx.fillStyle = "rgba(255, 214, 140, 0.85)";
-  ctx.beginPath();
-  ctx.arc(width * 0.72, gy - s * 26, s * 11, 0, Math.PI * 2);
-  ctx.fill();
+  for (const o of obstacles) drawSprite(o.sprite, o.x, o.y);
+  for (const d of dust) rect(d.x, d.y, 2, 1, COLORS.dust);
+  drawCardy();
 
-  // Far layer: Hoover Tower silhouette, slow parallax.
-  const spacing = width * 1.3;
-  ctx.fillStyle = "rgba(60, 10, 10, 0.6)";
-  for (let x = width * 0.15 - ((game.scroll * 0.1) % spacing); x < width + spacing; x += spacing) {
-    const top = gy - s * 58;
-    ctx.fillRect(x, top, s * 9, gy - top);
-    ctx.fillRect(x - s * 1.2, top + s * 6, s * 11.4, s * 2);
-    ctx.fillRect(x + s, top - s * 6, s * 7, s * 6);
-    ctx.beginPath();
-    ctx.ellipse(x + s * 4.5, top - s * 6, s * 4, s * 4.5, 0, Math.PI, 0);
-    ctx.fill();
-  }
-
-  // Middle layer: sandstone arcade with a red tile roof.
-  const archW = s * 14;
-  const wallTop = gy - s * 20;
-  ctx.fillStyle = COLORS.roof;
-  ctx.fillRect(0, wallTop - s * 3, width, s * 3);
-  ctx.fillStyle = COLORS.sandstone;
-  ctx.fillRect(0, wallTop, width, gy - wallTop);
-  ctx.fillStyle = "rgba(70, 30, 20, 0.55)";
-  for (let x = -((game.scroll * 0.35) % archW); x < width + archW; x += archW) {
-    const aw = archW * 0.62;
-    const ax = x + (archW - aw) / 2;
-    const top = wallTop + s * 6 + aw / 2;
-    ctx.beginPath();
-    ctx.moveTo(ax, gy);
-    ctx.arc(ax + aw / 2, top, aw / 2, Math.PI, 0);
-    ctx.lineTo(ax + aw, gy);
-    ctx.fill();
-  }
-
-  // Ground: grass edge with scrolling path marks, then deep green.
-  ctx.fillStyle = COLORS.grass;
-  ctx.fillRect(0, gy, width, s * 4);
-  ctx.fillStyle = COLORS.green;
-  ctx.fillRect(0, gy + s * 4, width, height - gy);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
-  const dash = s * 12;
-  for (let x = -(game.scroll % dash); x < width; x += dash) ctx.fillRect(x, gy + s * 1.5, dash * 0.45, s);
-}
-
-function line(points) {
-  ctx.beginPath();
-  points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-  ctx.stroke();
-}
-
-function drawBike(o, gy) {
-  const r = o.h * 0.38;
-  const back = [o.x + r, gy - r];
-  const front = [o.x + o.w - r, gy - r];
-  const crank = [o.x + o.w * 0.5, gy - r];
-  const seat = [o.x + o.w * 0.38, gy - o.h * 0.85];
-  const head = [o.x + o.w * 0.72, gy - o.h * 0.85];
-  ctx.lineWidth = Math.max(2, r * 0.22);
-  ctx.strokeStyle = "#1c1c1c";
-  for (const [x, y] of [back, front]) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = COLORS.cardinal;
-  line([back, seat, head, front]);
-  line([back, crank, seat]);
-  line([crank, head, [head[0], gy - o.h]]);
-  ctx.fillStyle = "#1c1c1c";
-  ctx.fillRect(seat[0] - r * 0.45, seat[1] - r * 0.2, r * 0.9, r * 0.3);
-  ctx.fillRect(head[0] - r * 0.3, gy - o.h - r * 0.1, r * 0.8, r * 0.25);
-}
-
-function drawScooter(o, gy) {
-  const r = o.h * 0.13;
-  ctx.fillStyle = "#1c1c1c";
-  ctx.beginPath();
-  ctx.arc(o.x + r, gy - r, r, 0, Math.PI * 2);
-  ctx.arc(o.x + o.w - r, gy - r, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = ctx.strokeStyle = "#3aa0a0";
-  ctx.fillRect(o.x, gy - r * 2.2, o.w * 0.85, r * 0.9);
-  ctx.lineWidth = Math.max(2, r * 0.6);
-  line([[o.x + o.w - r, gy - r], [o.x + o.w * 0.78, gy - o.h], [o.x + o.w * 0.5, gy - o.h]]);
+  ctx.restore();
+  drawHud();
 }
 
 function drawCardy() {
-  const { w, h } = treeSize();
-  const x = treeX();
-  const gy = groundY();
-  const shadow = Math.max(0.35, 1 - cardy.y / (u() * 40));
-  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x + w / 2, gy + u() * 0.8, w * 0.4 * shadow, u() * 1.4 * shadow, 0, 0, Math.PI * 2);
-  ctx.fill();
-  const running = game.state === "playing" && cardy.onGround;
-  const bob = running ? Math.abs(Math.sin(game.runTime * 14)) * u() * 1.2 : 0;
-  drawImage(images.treeSmall, x, gy - h - cardy.y - bob + h * 0.02, w, h);
-
-  ctx.fillStyle = COLORS.sandstone;
-  for (const p of particles) {
-    ctx.globalAlpha = 1 - p.age / p.life;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, u() * 0.9, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
+  let sprite = "cardyRun1";
+  if (state === "title") sprite = Math.floor(time * 2) % 2 ? "cardyRun1" : "cardyJump";
+  else if (state === "over") sprite = "cardyJump";
+  else if (!cardy.onGround) sprite = "cardyJump";
+  else if (cardy.ducking) sprite = "cardyDuck";
+  else sprite = Math.floor(distance / 14) % 2 ? "cardyRun1" : "cardyRun2";
+  drawSprite(sprite, cardy.x, cardy.y - spriteSize(sprite).height);
 }
 
-function text(str, x, y, size, { align = "center", weight = 800, blink = false } = {}) {
-  ctx.font = `${weight} ${size}px system-ui, -apple-system, "Segoe UI", sans-serif`;
-  ctx.textAlign = align;
-  ctx.textBaseline = "middle";
-  ctx.globalAlpha = blink ? 0.65 + Math.sin(game.time * 5) * 0.35 : 1;
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.fillText(str, x + size * 0.05, y + size * 0.07);
-  ctx.fillStyle = COLORS.sand;
-  ctx.fillText(str, x, y);
-  ctx.globalAlpha = 1;
-}
+// The sky is the same every frame, so it is painted once and reused.
+let skyImage = null;
 
-function draw() {
-  const { width, height } = screen;
-  const s = u();
-  const gy = groundY();
-  drawBackground();
-
-  if (game.state === "title") {
-    const th = Math.min(height * 0.42, width * 0.6);
-    const tw = th * (834 / 1076);
-    drawImage(images.tree, width / 2 - tw / 2, gy - th * 0.98 + Math.sin(game.time * 3) * s, tw, th);
-    text("TREE RUN", width / 2, height * 0.15, Math.min(width * 0.16, s * 14), { weight: 900 });
-    text("PRESS SPACE OR TAP TO START", width / 2, height * 0.15 + s * 11, Math.min(width * 0.045, s * 4.2), { weight: 600, blink: true });
-    if (game.best > 0) text(`BEST ${game.best}`, width / 2, gy + (height - gy) / 2, s * 4.5, { weight: 700 });
-    return;
-  }
-
-  for (const o of obstacles) (o.type === "bike" ? drawBike : drawScooter)(o, gy);
-  drawCardy();
-
-  const pad = s * 4;
-  text(String(game.score), width - pad, pad + s * 4, s * 9, { align: "right", weight: 900 });
-  text(`BEST ${Math.max(game.best, game.score)}`, width - pad, pad + s * 11, s * 3.6, { align: "right", weight: 700 });
-  if (game.state === "playing" && game.runTime < 3) {
-    text("SPACE OR TAP TO JUMP", width / 2, gy + (height - gy) / 2, s * 4, { weight: 600, blink: true });
-  }
-
-  if (game.state === "over") {
-    const pw = Math.min(width * 0.86, s * 80);
-    const ph = s * 46;
-    const py = height * 0.4 - ph / 2;
-    ctx.fillStyle = "rgba(40, 6, 6, 0.75)";
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(width / 2 - pw / 2, py, pw, ph, s * 3);
-    else ctx.rect(width / 2 - pw / 2, py, pw, ph);
-    ctx.fill();
-    text("GAME OVER", width / 2, py + ph * 0.18, Math.min(pw * 0.13, s * 10), { weight: 900 });
-    text(`SCORE ${game.score}`, width / 2, py + ph * 0.44, s * 6);
-    text(game.newBest ? "NEW BEST!" : `BEST ${game.best}`, width / 2, py + ph * 0.62, s * 4.4, { weight: 700 });
-    if (game.overTime > 0.6) {
-      const size = Math.min(pw * 0.045, s * 3.6);
-      text("PRESS SPACE OR TAP TO PLAY AGAIN", width / 2, py + ph * 0.84, size, { weight: 600, blink: true });
+function drawSky() {
+  if (!skyImage) {
+    skyImage = document.createElement("canvas");
+    skyImage.width = screen.width;
+    skyImage.height = GROUND_Y;
+    const g = skyImage.getContext("2d");
+    const band = Math.ceil(GROUND_Y / COLORS.sky.length);
+    COLORS.sky.forEach((color, i) => {
+      g.fillStyle = color;
+      g.fillRect(0, i * band, screen.width, band);
+      // A checkerboard row blends each band into the next, the old-school way.
+      if (i > 0) {
+        g.fillStyle = COLORS.sky[i - 1];
+        for (let x = 0; x < screen.width; x += 2) g.fillRect(x, i * band, 1, 1);
+        for (let x = 1; x < screen.width; x += 2) g.fillRect(x, i * band + 2, 1, 1);
+      }
+    });
+    g.fillStyle = COLORS.sun;
+    const sun = { x: 206, y: 34, r: 11 };
+    for (let dy = -sun.r; dy <= sun.r; dy++) {
+      const half = Math.round(Math.sqrt(sun.r * sun.r - dy * dy));
+      g.fillRect(sun.x - half, sun.y + dy, half * 2, 1);
     }
+  }
+  ctx.drawImage(skyImage, 0, 0);
+}
+
+function drawHills(offset, baseY, size, color, shade) {
+  for (let x = 0; x < screen.width; x++) {
+    const wx = x + offset;
+    const top = Math.round(baseY - size * (Math.sin(wx / 37) + Math.sin(wx / 23 + 1.3) * 0.6 + 1.6));
+    rect(x, top, 1, GROUND_Y - top, color);
+    if (shade) rect(x, top, 1, 2, shade);
+  }
+}
+
+// Hoover Tower, drawn with rectangles.
+function drawHooverTower(x, groundY) {
+  const w = 14;
+  rect(x - 4, groundY - 6, w + 8, 6, COLORS.towerShade);
+  rect(x, groundY - 46, w, 40, COLORS.tower);
+  rect(x + w - 3, groundY - 46, 3, 40, COLORS.towerShade);
+  rect(x - 1, groundY - 50, w + 2, 4, COLORS.towerShade);
+  for (let i = 0; i < 3; i++) rect(x + 2 + i * 4, groundY - 46 + 2, 2, 5, COLORS.towerShade);
+  rect(x + 1, groundY - 53, w - 2, 3, COLORS.tower);
+  rect(x + 3, groundY - 56, w - 6, 3, COLORS.dome);
+  rect(x + 5, groundY - 58, w - 10, 2, COLORS.dome);
+  rect(x + 6, groundY - 61, 2, 3, COLORS.towerShade);
+}
+
+function drawGround() {
+  rect(0, GROUND_Y, screen.width, screen.height - GROUND_Y, COLORS.ground);
+  rect(0, GROUND_Y, screen.width, 1, COLORS.groundLine);
+  rect(0, GROUND_Y + 1, screen.width, 2, COLORS.grass);
+  // Pebbles at fixed spots in the world, so they scroll with the ground.
+  const tile = 8;
+  for (let sx = -(distance % tile); sx < screen.width; sx += tile) {
+    const n = Math.imul(Math.floor((distance + sx) / tile) + 1, 2654435761) >>> 0;
+    if (n % 3 === 0) rect(sx + (n % 5), GROUND_Y + 6 + ((n >>> 4) % 18), 2, 1, COLORS.groundSpeck);
+    if (n % 7 === 0) rect(sx + ((n >>> 2) % 6), GROUND_Y + 4 + ((n >>> 8) % 20), 1, 1, COLORS.groundLine);
+  }
+}
+
+function drawHud() {
+  const pad = (n) => String(n).padStart(5, "0");
+  const blink = flashTimer > 0 && Math.floor(flashTimer * 8) % 2 === 0;
+  if (!blink) drawText(pad(score), screen.width - 8, 8, { color: COLORS.text, align: "right" });
+  drawText(`HI ${pad(best)}`, screen.width - 46, 8, { color: COLORS.text, align: "right" });
+  if (muted) drawText("SOUND OFF", 8, 8, { color: COLORS.text });
+
+  const center = screen.width / 2;
+  const blinkOn = Math.floor(time * 2) % 2 === 0;
+  if (state === "title") {
+    drawText("TREE RUN", center + 1, 45, { color: COLORS.text, scale: 3, align: "center" });
+    drawText("TREE RUN", center, 44, { color: COLORS.title, scale: 3, align: "center" });
+    if (blinkOn) drawText("PRESS SPACE OR TAP", center, 80, { color: COLORS.text, align: "center" });
+    drawText("DOWN ARROW TO DUCK", center, 94, { color: COLORS.text, align: "center" });
+  } else if (state === "over") {
+    drawText("GAME OVER", center + 1, 57, { color: COLORS.text, scale: 2, align: "center" });
+    drawText("GAME OVER", center, 56, { color: COLORS.title, scale: 2, align: "center" });
+    if (newBest) drawText("NEW HIGH SCORE!", center, 78, { color: COLORS.title, align: "center" });
+    if (overTimer > 0.6 && blinkOn) drawText("PRESS SPACE TO RUN AGAIN", center, 92, { color: COLORS.text, align: "center" });
   }
 }
