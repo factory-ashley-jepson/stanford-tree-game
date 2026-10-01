@@ -79,9 +79,9 @@ Ask Droid: `deploy this game to GitHub Pages from my own GitHub repo`. You'll ne
 
 ## Bonus: put Droid on a schedule
 
-Factory **Automations** run Droid for you on a schedule, from Slack, on GitHub events, or from webhooks. Open [app.factory.ai/automations](https://app.factory.ai/automations), choose **New automation**, then **Create with Droid**, and try:
+Factory **Automations** run Droid for you on a schedule, from Slack, on GitHub events, or from webhooks.
 
-> Every day at 10am Pacific, check today's lunch and dinner menus for every Stanford dining hall at rdeapps.stanford.edu/dininghallmenu. Rank the halls for me: I'm vegetarian, I love spicy food, and I avoid mushrooms. Send me a Slack DM with my top pick for lunch and for dinner, two runners-up, and the dishes worth walking for. Don't pick the same hall more than two days in a row.
+[`automations/dining-digest`](automations/dining-digest) is a working example: every morning it checks all 9 Stanford dining hall menus and DMs you where to eat, based on your preferences. Copy its `PROMPT.md` into [app.factory.ai/automations](https://app.factory.ai/automations) (**New automation**, then **Create with Droid**) and make it yours.
 
 ## Credits
 
