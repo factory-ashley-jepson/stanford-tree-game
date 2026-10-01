@@ -20,6 +20,20 @@ const PALETTE = {
   n: "#6a5a90", // bird wing
   Y: "#f2b632", // beak
   C: "#c9dce8", // cloud shade
+  A: "#7a4a22", // acorn cap
+  a: "#5a3416", // acorn cap shadow
+  U: "#d88a3c", // acorn nut
+  u: "#a8602a", // acorn nut shadow
+  T: "#ecc89c", // milk tea
+  t: "#c99a6a", // milk tea shadow
+  p: "#3a2418", // boba pearls
+  S: "#8ff0ff", // shield glow
+  s: "#1f9fb4", // shield glow edge
+  F: "#e0a530", // Cal bear fur (gold)
+  f: "#a8741c", // fur shadow
+  V: "#23336a", // Cal navy
+  v: "#141e44", // navy shadow
+  Z: "#ffe9a8", // moon
 };
 
 const SPRITES = {
@@ -206,6 +220,74 @@ const SPRITES = {
     "......NnnN......",
     "......NnN.......",
     "......NN........",
+  ],
+
+  // Cal Bear, 20x16, walking left. Two walking frames.
+  bearWalk1: [
+    "..........KKKKKK....",
+    ".KK...KK.KVVVVVVKK..",
+    "KfFK.KFfKVVVVVVVVVK.",
+    "KFFFFFFFFKVVVVVVVVVK",
+    "KFKFFFFFFKYYYYYYYYYK",
+    "KKTTFFFFFKVVVVVVVVVK",
+    "KTTTFFFFFKVVVVVVVVvK",
+    ".KTTFFFFKVVVVVVVVVvK",
+    "..KKFFFKvvvvvvvvvvvK",
+    "...KFFFFFFFFFFFFFFfK",
+    "...KFFFFFFFFFFFFFffK",
+    "...KFFFFKKKKKKKFFFFK",
+    "...KFFFfK.....KFFFfK",
+    "...KFFFfK.....KFFFfK",
+    "..KffffK.....KffffK.",
+    "..KKKKKK.....KKKKKK.",
+  ],
+  bearWalk2: [
+    "..........KKKKKK....",
+    ".KK...KK.KVVVVVVKK..",
+    "KfFK.KFfKVVVVVVVVVK.",
+    "KFFFFFFFFKVVVVVVVVVK",
+    "KFKFFFFFFKYYYYYYYYYK",
+    "KKTTFFFFFKVVVVVVVVVK",
+    "KTTTFFFFFKVVVVVVVVvK",
+    ".KTTFFFFKVVVVVVVVVvK",
+    "..KKFFFKvvvvvvvvvvvK",
+    "...KFFFFFFFFFFFFFFfK",
+    "...KFFFFFFFFFFFFFffK",
+    "...KFFFFKKKKKKKFFFFK",
+    "....KFFFK...KFFFfK..",
+    ".....KFFfK.KFFFfK...",
+    ".....KfffKKffffK....",
+    ".....KKKKKKKKKKK....",
+  ],
+
+  // Pickups
+  acorn: [
+    "....K....",
+    "...KaK...",
+    ".KKAAAKK.",
+    "KAAAAAAaK",
+    "KAaAaAaaK",
+    "KKKKKKKKK",
+    ".KUWUUuK.",
+    ".KUUUUuK.",
+    ".KUUUuuK.",
+    "..KUuuK..",
+    "...KKK...",
+  ],
+  boba: [
+    ".....KK..",
+    ".....KRK.",
+    "....KRK..",
+    "..KKRKK..",
+    ".KWWRWWK.",
+    "KKKKKKKKK",
+    "KTTTTTTtK",
+    ".KTWTTtK.",
+    ".KTTTTtK.",
+    ".KTTTTtK.",
+    ".KpTpTpK.",
+    ".KpppppK.",
+    "..KKKKK..",
   ],
 
   // Scenery

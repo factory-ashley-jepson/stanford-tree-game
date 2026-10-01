@@ -2,6 +2,8 @@
 
 Remix a retro arcade game starring Cardy, the Stanford Tree, in 30 minutes with [Factory](https://factory.ai) Droid.
 
+> **You're on the `example` branch.** This is a finished remix, **Big Game Run**, built with one pass through plan, build, test, ship: a double jump, Cal Bears, acorns for bonus points, a boba shield, and day turning to night. See `SPEC.md` for its plan and checked-off Definition of done. To start your own remix, use the `main` branch.
+
 This repo starts as **Tree Run**, a pixel-art runner inspired by the Chrome dinosaur game, playing on an old-school computer. Cardy runs across campus, jumps cones and bikes, and ducks under birds. What it becomes is up to you.
 
 <p align="center"><img src="docs/screenshot.png" alt="Tree Run: pixel-art Cardy running on a retro computer screen" width="640" /></p>
