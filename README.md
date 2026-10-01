@@ -2,11 +2,9 @@
 
 Remix a retro arcade game starring Cardy, the Stanford Tree, in 30 minutes with [Factory](https://factory.ai) Droid.
 
-> **You're on the `example` branch.** This is a finished remix, **Big Game Run**, built with one pass through plan, build, test, ship: a double jump, Cal Bears, acorns for bonus points, a boba shield, and day turning to night. See `SPEC.md` for its plan and checked-off Definition of done. To start your own remix, use the `main` branch.
+This repo starts as **Big Game Run**, a pixel-art runner inspired by the Chrome dinosaur game, playing on an old-school computer. Cardy sprints across campus on Big Game day: jump cones, bikes, and Cal Bears, double-jump, duck under birds, grab acorns for points and boba for a shield, and run from day into night. What it becomes is up to you.
 
-This repo starts as **Tree Run**, a pixel-art runner inspired by the Chrome dinosaur game, playing on an old-school computer. Cardy runs across campus, jumps cones and bikes, and ducks under birds. What it becomes is up to you.
-
-<p align="center"><img src="docs/screenshot.png" alt="Tree Run: pixel-art Cardy running on a retro computer screen" width="640" /></p>
+<p align="center"><img src="docs/screenshot.png" alt="Big Game Run: pixel-art Cardy running on a retro computer screen" width="640" /></p>
 
 ## Quickstart
 
@@ -28,7 +26,7 @@ cd stanford-tree-game
 python3 -m http.server 8000     # Windows: py -m http.server 8000
 ```
 
-Open http://localhost:8000 and press **Space** (or tap the screen) to run. **Space** or **Up** jumps, **Down** ducks, and **M** mutes the sound. On a phone, use the keys under the screen.
+Open http://localhost:8000 and press **Space** (or tap the screen) to run. **Space** or **Up** jumps (press it again in the air to double-jump), **Down** ducks, and **M** mutes the sound. On a phone, use the keys under the screen.
 
 **3. Start Droid** in a second terminal, in the same folder:
 
@@ -55,7 +53,7 @@ Then go around the loop again: add a stretch goal to `SPEC.md`, build it, test i
 
 - Press **Shift+Tab** to switch modes. Spec mode makes Droid plan before it edits.
 - Keep the game running in your browser and refresh after each change. If you don't see a change, hard refresh (**Cmd+Shift+R**, or **Ctrl+Shift+R** on Windows).
-- Small asks work best: "add a boba power-up that makes Cardy invincible for 3 seconds" beats "make it better".
+- Small asks work best: "add a scooter obstacle that zooms in faster than the bikes" beats "make it better".
 
 ## What's in the box
 
@@ -73,20 +71,19 @@ The screen is 256x192 pixels, scaled up so every pixel stays crisp.
 
 You don't need one: `/plan-game` will help. Some starting points:
 
-- **New setting:** Big Game night, finals week at Green Library, a run down Palm Drive at sunset.
-- **New obstacles:** Cal Bears, scooters, tour groups, falling acorns.
-- **New moves:** a double jump, a dash, or a glide.
-- **Collectibles:** grab boba or acorns for bonus points.
-- **Power-ups:** a shield, slow motion, or a magnet.
+- **New setting:** finals week at Green Library, a run down Palm Drive, a rainy day on Main Quad.
+- **New obstacles:** scooters, tour groups, falling footballs, a Cal Bear boss.
+- **New moves:** a dash, a glide, or a ground pound.
+- **New power-ups:** slow motion, a magnet for acorns, or double points.
 - **A different game:** keep the engine and the computer, and turn it into a flyer, a dodger, or a catch game.
 
 ## Stretch goals
 
-- Day and night: the sky darkens every 500 points, with stars and a moon
-- A power-up with a timer bar on screen
 - Background music made with `beep()`
 - A pause key
 - Lives or hearts instead of one-hit game over
+- Weather: rain or fog that rolls in at night
+- A combo meter for acorns grabbed in a row
 - Your own pixel art in `sprites.js`
 
 ## Deploy and share

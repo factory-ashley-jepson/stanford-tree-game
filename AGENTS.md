@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Tree Run: a retro pixel-art runner starring Cardy, the Stanford Tree, shown on an old-school computer. Students remix it during a 30-minute workshop, so favor small, working steps over big rewrites.
+Big Game Run: a retro pixel-art runner starring Cardy, the Stanford Tree, shown on an old-school computer. Students remix it during a 30-minute workshop, so favor small, working steps over big rewrites.
 
 ## Run
 

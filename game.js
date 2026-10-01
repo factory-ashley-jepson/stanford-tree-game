@@ -1,4 +1,4 @@
-// Big Game Run: a remix of Tree Run starring Cardy, the Stanford Tree.
+// Big Game Run: a retro runner starring Cardy, the Stanford Tree.
 // Jump over cones, bikes, and Cal Bears, duck under birds, grab acorns and
 // boba, and run from day into night.
 //
